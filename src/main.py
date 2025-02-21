@@ -133,14 +133,14 @@ def can_be_keyword(param: inspect.Parameter) -> bool:
     return param.kind in (inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
 
 def locate_positional_param(target_params: inspect.Signature) -> Optional[inspect.Parameter]:
-    for _, param in target_params.parameters:
+    for param in target_params.parameters.values():
         if param.kind == inspect.Parameter.VAR_POSITIONAL:
             return param
 
     return None
 
 def locate_keyword_param(target_params: inspect.Signature) -> Optional[inspect.Parameter]:
-    for _, param in target_params.parameters:
+    for param in target_params.parameters.values():
         if param.kind == inspect.Parameter.VAR_KEYWORD:
             return param
 
@@ -151,8 +151,7 @@ def get_target_type_positional(
 ) -> Iterable[Tuple[object, type]]:
     original_args = iter(original_args)
     param = None
-    for param_name, param in target_params.parameters.values():
-        param_name, param = param
+    for param_name, param in target_params.parameters.items():
         param: Optional[inspect.Parameter] = param
         # inspect.Parameter.annotation
         if can_be_positional(param):
@@ -176,7 +175,7 @@ def get_target_type_keyword(
 ) -> Iterable[Tuple[Tuple[str, object], type]]:
     remaining = dict(original_args)
 
-    for param_name, param in target_params.parameters.values():
+    for param_name, param in target_params.parameters.items():
         if can_be_keyword(param):
             if param_name in remaining:
                 val = remaining.pop(param_name)
@@ -205,7 +204,7 @@ def as_is_conversion(obj, typ):
 def pydantic_conversion(obj, typ):
     return parse_obj_as(typ, obj)
 
-def pydantic_wrapper(
+def converted(
     conversions: Optional[List[Callable[[object, type], Any]]] = None
 ) -> Callable[Callable, Callable]:
     if conversions is None:
