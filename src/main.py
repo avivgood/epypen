@@ -192,42 +192,51 @@ def get_target_type_keyword(
 def convert(obj: object, to_typ: type, conversions: List[Callable[[object, type], Any]]):
     for conversion in conversions:
         try:
-             return conversion(obj, to_typ)
+             return conversion(to_typ, obj)
         except Exception:
             pass
 
     raise NotImplemented(f"No conversion for object {obj}")
 
-def as_is_conversion(obj, typ):
+def as_is_conversion(typ, obj):
     return obj
 
-def pydantic_conversion(obj, typ):
-    return parse_obj_as(typ, obj)
+DEFAULT_CONVERSIONS = [
+    as_is_conversion,
+    parse_obj_as
+]
+
 
 def converted(
-    conversions: Optional[List[Callable[[object, type], Any]]] = None
+    conversions: Union[Optional[List[Callable[[type, object], Any]]], Callable] = None
 ) -> Callable[Callable, Callable]:
-    if conversions is None:
-        conversions = [
-            pydantic_conversion,
-            as_is_conversion
-        ]
-    def deco(func: Callable) -> Callable:
-        signature = get_typed_signature(func)
+    if conversions is None or callable(conversions):
+        selected_conversions = DEFAULT_CONVERSIONS
+    else:
+        selected_conversions = conversions
 
+
+    def deco(func: Callable) -> Callable:
         @functools.wraps(func)
         def raw_function(*args, **kwargs):
+            signature = get_typed_signature(func)
             typed_args = get_target_type_positional(signature, args)
             typed_kwargs = get_target_type_keyword(signature, kwargs)
             new_args = []
             new_kwargs = {}
             for obj, typ in typed_args:
-                new_args.append(convert(obj, typ, conversions))
+                new_args.append(convert(obj, typ, selected_conversions))
             for kv, typ in typed_kwargs:
                 key, val = kv
-                new_kwargs[key] = convert(val, typ, conversions)
-            return func(*new_args, **new_kwargs)
+                new_kwargs[key] = convert(val, typ, selected_conversions)
+            return_val = func(*new_args, **new_kwargs)
+            return_type = signature.return_annotation
+            return convert(return_val, return_type, selected_conversions)
 
         return raw_function
-    return deco
+    if callable(conversions):
+        return deco(conversions)
+    else:
+        return deco
+
 
