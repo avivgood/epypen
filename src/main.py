@@ -14,7 +14,7 @@ from src.utils import (
     get_typed_signature,
     get_target_type_keyword,
     get_target_type_positional,
-    convert, get_typed_annotation,
+    convert, get_typed_annotation, TargetAnnotation, update_signature_according_to_annotations,
 )
 
 
@@ -43,10 +43,13 @@ def converted(
             return_val = func(*new_args, **new_kwargs)
             return_type = get_typed_annotation(signature.return_annotation, func)
             return convert(return_val, return_type, selected_conversions)
-        raw_function.__signature__ = raw_func_signature
+        raw_function.__signature__ = update_signature_according_to_annotations(raw_func_signature)
         return raw_function
-
     if callable(conversions):
         return deco(conversions)
     else:
         return deco
+
+
+def to(annotation: Any) -> TargetAnnotation:
+    return TargetAnnotation(annotation)

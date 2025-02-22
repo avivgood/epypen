@@ -1,4 +1,5 @@
 import inspect
+from inspect import Signature
 from typing_extensions import (
     Any,
     get_origin,
@@ -17,7 +18,6 @@ from typing_extensions import (
 
 from pydantic.version import VERSION as PYDANTIC_VERSION
 from .exceptions import ConversionsError
-
 
 Unknown = NewType("Unknown", Any)
 PYDANTIC_VERSION_MINOR_TUPLE = tuple(int(x) for x in PYDANTIC_VERSION.split(".")[:2])
@@ -42,17 +42,18 @@ def get_typed_annotation(annotation: Any, call: Callable[..., Any]) -> Any:
 def get_typed_signature(call: Callable[..., Any]) -> inspect.Signature:
     signature = inspect.signature(call)
 
-    typed_params = [
-        inspect.Parameter(
-            name=param.name,
-            kind=param.kind,
-            default=param.default,
-            annotation=get_typed_annotation(param.annotation, call),
-        )
-        for param in signature.parameters.values()
-    ]
-    typed_signature = inspect.Signature(typed_params)
-    return typed_signature
+    return signature.replace(
+        parameters=[
+            inspect.Parameter(
+                name=param.name,
+                kind=param.kind,
+                default=param.default,
+                annotation=get_original_type_according_to_annotation(get_typed_annotation(param.annotation, call)),
+            )
+            for param in signature.parameters.values()
+        ],
+        return_annotation=get_original_type_according_to_annotation(get_typed_annotation(signature.return_annotation, call))
+    )
 
 
 def extract_kwargs_value_type(annotation: Any, key: str) -> Any:
@@ -84,9 +85,9 @@ def extract_kwargs_value_type(annotation: Any, key: str) -> Any:
         inner = get_args(annotation)[0]
         # Ensure inner is a class that qualifies as a TypedDict.
         if not (
-            isinstance(inner, type)
-            and issubclass(inner, dict)
-            and hasattr(inner, "__annotations__")
+                isinstance(inner, type)
+                and issubclass(inner, dict)
+                and hasattr(inner, "__annotations__")
         ):
             return Unknown
         td_annotations = inner.__annotations__
@@ -145,7 +146,7 @@ def can_be_keyword(param: inspect.Parameter) -> bool:
 
 
 def locate_positional_param(
-    target_params: inspect.Signature,
+        target_params: inspect.Signature,
 ) -> Optional[inspect.Parameter]:
     for param in target_params.parameters.values():
         if param.kind == inspect.Parameter.VAR_POSITIONAL:
@@ -155,7 +156,7 @@ def locate_positional_param(
 
 
 def locate_keyword_param(
-    target_params: inspect.Signature,
+        target_params: inspect.Signature,
 ) -> Optional[inspect.Parameter]:
     for param in target_params.parameters.values():
         if param.kind == inspect.Parameter.VAR_KEYWORD:
@@ -165,8 +166,8 @@ def locate_keyword_param(
 
 
 def get_target_type_positional(
-    target_params: inspect.Signature,
-    original_args: tuple[object],
+        target_params: inspect.Signature,
+        original_args: tuple[object],
 ) -> Iterable[Tuple[object, type]]:
     original_args = iter(original_args)
     for param_name, param in target_params.parameters.items():
@@ -190,7 +191,7 @@ def get_target_type_positional(
 
 
 def get_target_type_keyword(
-    target_params: inspect.Signature, original_args: dict[str, object]
+        target_params: inspect.Signature, original_args: dict[str, object]
 ) -> Iterable[Tuple[Tuple[str, object], type]]:
     remaining = dict(original_args)
 
@@ -210,7 +211,7 @@ def get_target_type_keyword(
 
 
 def convert(
-    obj: object, to_typ: type, conversions: List[Callable[[object, type], Any]]
+        obj: object, to_typ: type, conversions: List[Callable[[object, type], Any]]
 ):
     errors = []
     for conversion in conversions:
@@ -220,3 +221,57 @@ def convert(
             errors.append(e)
 
     raise ConversionsError(f"No conversion for object {obj}", errors)
+
+
+class TargetAnnotation:
+    def __init__(self, annotation: Any):
+        self.annotation = annotation
+
+
+def get_target_type_according_to_annotation(typ: Any):
+    if get_origin(typ) is Annotated:
+        # In Annotated[T, ...], T is the underlying type.
+        annotations = get_args(typ)
+        if len(annotations) > 2 and any(*[isinstance(annotation, TargetAnnotation) for annotation in annotations[1:]]):
+            raise TypeError("Annotating with a target annotation (to()) is only supported"
+                            "with one metadata parameter (cannot do (Annotated[T1, to(T2), M]))")
+        if len(annotations) != 2:
+            return typ
+        annotation = annotations[1]
+        if isinstance(annotation, TargetAnnotation):
+            return annotation.annotation
+
+        return typ
+    else:
+        return typ
+
+
+def get_original_type_according_to_annotation(typ: Any):
+    if get_origin(typ) is Annotated:
+        # In Annotated[T, ...], T is the underlying type.
+        annotations = get_args(typ)
+        if len(annotations) > 2 and any(*[isinstance(annotation, TargetAnnotation) for annotation in annotations[1:]]):
+            raise TypeError("Annotating with a target annotation (to()) is only supported"
+                            "with one metadata parameter (cannot do (Annotated[T1, to(T2), M]))")
+        if len(annotations) != 2:
+            return typ
+        original_annotation, target_annotation = annotations
+        if isinstance(target_annotation, TargetAnnotation):
+            return original_annotation
+
+        return typ
+    else:
+        return typ
+
+
+
+def update_signature_according_to_annotations(signature: Signature):
+    return signature.replace(
+        parameters=[inspect.Parameter(
+            name=param.name,
+            kind=param.kind,
+            default=param.default,
+            annotation=get_target_type_according_to_annotation(param.annotation)
+        ) for param in signature.parameters.values()],
+        return_annotation=get_target_type_according_to_annotation(signature.return_annotation)
+    )
