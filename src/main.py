@@ -1,3 +1,5 @@
+import inspect
+
 from typing_extensions import (
     Any,
     Callable,
@@ -12,7 +14,7 @@ from src.utils import (
     get_typed_signature,
     get_target_type_keyword,
     get_target_type_positional,
-    convert,
+    convert, get_typed_annotation,
 )
 
 
@@ -25,6 +27,7 @@ def converted(
         selected_conversions = conversions
 
     def deco(func: Callable) -> Callable:
+        raw_func_signature = inspect.signature(func)
         @functools.wraps(func)
         def raw_function(*args, **kwargs):
             signature = get_typed_signature(func)
@@ -38,9 +41,9 @@ def converted(
                 key, val = kv
                 new_kwargs[key] = convert(val, typ, selected_conversions)
             return_val = func(*new_args, **new_kwargs)
-            return_type = signature.return_annotation
+            return_type = get_typed_annotation(signature.return_annotation, func)
             return convert(return_val, return_type, selected_conversions)
-
+        raw_function.__signature__ = raw_func_signature
         return raw_function
 
     if callable(conversions):

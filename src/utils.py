@@ -31,7 +31,8 @@ else:
     from pydantic.utils import evaluate_forwardref
 
 
-def get_typed_annotation(annotation: Any, globalns: Dict[str, Any]) -> Any:
+def get_typed_annotation(annotation: Any, call: Callable[..., Any]) -> Any:
+    globalns = getattr(call, "__globals__", {})
     if isinstance(annotation, str):
         annotation = ForwardRef(annotation)
         annotation = evaluate_forwardref(annotation, globalns, globalns)
@@ -40,13 +41,13 @@ def get_typed_annotation(annotation: Any, globalns: Dict[str, Any]) -> Any:
 
 def get_typed_signature(call: Callable[..., Any]) -> inspect.Signature:
     signature = inspect.signature(call)
-    globalns = getattr(call, "__globals__", {})
+
     typed_params = [
         inspect.Parameter(
             name=param.name,
             kind=param.kind,
             default=param.default,
-            annotation=get_typed_annotation(param.annotation, globalns),
+            annotation=get_typed_annotation(param.annotation, call),
         )
         for param in signature.parameters.values()
     ]
@@ -125,11 +126,6 @@ def extract_args_element_type(annotation: Any, idx_in_args: int) -> Any:
         if idx_in_args >= len(inner):
             return Unknown
         return origin[idx_in_args]
-    if origin in (tuple, Tuple):
-        args = get_args(annotation)
-        # Expect homogeneous tuple: it must have exactly two arguments and the second one must be Ellipsis.
-        if len(args) == 2 and args[1] is Ellipsis:
-            return args[0]
     # Otherwise, assume the annotation itself is the per‐element type.
     return annotation
 
