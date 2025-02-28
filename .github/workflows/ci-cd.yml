@@ -56,7 +56,7 @@ jobs:
         run: black --check .
 
       - name: Run bandit security scan
-        run: bandit -r .
+        run: bandit -r src
 
   # On merge to main, create a release and publish with uv.
   release:
