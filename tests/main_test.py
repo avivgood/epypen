@@ -143,7 +143,9 @@ def test_more_data_inside_of_annotation_block_in_return_type():
     with pytest.raises(TypeError):
 
         @converted
-        def foo(x: Annotated[int, via(str)], y: int = 3) -> Annotated[int, to(str), int]:
+        def foo(
+            x: Annotated[int, via(str)], y: int = 3
+        ) -> Annotated[int, to(str), int]:
             return x + y
 
 
