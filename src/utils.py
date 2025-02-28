@@ -8,7 +8,6 @@ from typing_extensions import (
     Unpack,
     NewType,
     Annotated,
-    Dict,
     ForwardRef,
     Tuple,
     Iterable,
