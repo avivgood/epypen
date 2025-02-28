@@ -12,5 +12,8 @@ def convert_model_to_dict(typ, obj: BaseModel):
     return obj.dict()
 
 
-DEFAULT_RETURN_TYPE_CONVERSIONS = [parse_obj_as, convert_model_to_dict, as_is_conversion]
-
+DEFAULT_RETURN_TYPE_CONVERSIONS = [
+    parse_obj_as,
+    convert_model_to_dict,
+    as_is_conversion,
+]

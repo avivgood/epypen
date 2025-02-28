@@ -64,15 +64,18 @@ def test_signature_is_modified_by_annotations():
     def foo(x: Annotated[int, via(str)], y: int = 3) -> Annotated[int, to(bool)]:
         return x + y
 
-    assert inspect.signature(foo) == inspect.Signature(parameters=[
-        Parameter("x", Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
-        Parameter("y", Parameter.POSITIONAL_OR_KEYWORD, annotation=int, default=3),
-    ],
-        return_annotation=bool)
+    assert inspect.signature(foo) == inspect.Signature(
+        parameters=[
+            Parameter("x", Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
+            Parameter("y", Parameter.POSITIONAL_OR_KEYWORD, annotation=int, default=3),
+        ],
+        return_annotation=bool,
+    )
 
 
 def test_target_instead_of_origin_annotation():
     with pytest.raises(TypeError):
+
         @converted
         def foo(x: Annotated[int, to(str)], y: int = 3) -> Annotated[int, to(bool)]:
             return x + y
@@ -80,6 +83,7 @@ def test_target_instead_of_origin_annotation():
 
 def test_origin_instead_of_target_annotation():
     with pytest.raises(TypeError):
+
         @converted
         def foo(x: Annotated[int, via(str)], y: int = 3) -> Annotated[int, via(bool)]:
             return x + y
@@ -87,37 +91,57 @@ def test_origin_instead_of_target_annotation():
 
 def test_more_data_inside_of_annotation_block_in_parameters():
     with pytest.raises(TypeError):
+
         @converted
-        def foo(x: Annotated[int, via(str), int], y: int = 3) -> Annotated[int, to(bool)]:
+        def foo(
+            x: Annotated[int, via(str), int], y: int = 3
+        ) -> Annotated[int, to(bool)]:
             return x + y
 
     with pytest.raises(TypeError):
+
         @converted
-        def foo(x: Annotated[int, via(str), via(int)], y: int = 3) -> Annotated[int, to(bool)]:
-            return x + y
-    with pytest.raises(TypeError):
-        @converted
-        def foo(x: Annotated[int, str, via(int)], y: int = 3) -> Annotated[int, to(bool)]:
+        def foo(
+            x: Annotated[int, via(str), via(int)], y: int = 3
+        ) -> Annotated[int, to(bool)]:
             return x + y
 
     with pytest.raises(TypeError):
+
         @converted
-        def foo(x: Annotated[int, via(int)], y: Annotated[int, via(int), str] = 3) -> Annotated[int, to(bool)]:
+        def foo(
+            x: Annotated[int, str, via(int)], y: int = 3
+        ) -> Annotated[int, to(bool)]:
+            return x + y
+
+    with pytest.raises(TypeError):
+
+        @converted
+        def foo(
+            x: Annotated[int, via(int)], y: Annotated[int, via(int), str] = 3
+        ) -> Annotated[int, to(bool)]:
             return x + y
 
 
 def test_more_data_inside_of_annotation_block_in_return_type():
     with pytest.raises(TypeError):
+
         @converted
-        def foo(x: Annotated[int, via(str)], y: int = 3) -> Annotated[int, to(bool), str]:
+        def foo(
+            x: Annotated[int, via(str)], y: int = 3
+        ) -> Annotated[int, to(bool), str]:
             return x + y
 
     with pytest.raises(TypeError):
+
         @converted
-        def foo(x: Annotated[int, via(str)], y: int = 3) -> Annotated[int, to(bool), to(str)]:
+        def foo(
+            x: Annotated[int, via(str)], y: int = 3
+        ) -> Annotated[int, to(bool), to(str)]:
             return x + y
 
     with pytest.raises(TypeError):
+
         @converted
         def foo(x: Annotated[int, via(str)], y: int = 3) -> Annotated[int, to(str)]:
             return x + y
@@ -125,23 +149,33 @@ def test_more_data_inside_of_annotation_block_in_return_type():
 
 def test_mix_target_annotation_and_original_annotation():
     with pytest.raises(TypeError):
+
         @converted
-        def foo(x: Annotated[bool, via(str), to(str)], y: int = 3) -> Annotated[int, to(bool)]:
+        def foo(
+            x: Annotated[bool, via(str), to(str)], y: int = 3
+        ) -> Annotated[int, to(bool)]:
             return x + y
 
     with pytest.raises(TypeError):
+
         @converted
-        def foo(x: Annotated[int, via(str)], y: int = 3) -> Annotated[bool, via(int), to(bool)]:
+        def foo(
+            x: Annotated[int, via(str)], y: int = 3
+        ) -> Annotated[bool, via(int), to(bool)]:
             return x + y
 
     with pytest.raises(TypeError):
+
         @converted
         def foo(x: Annotated[to(int), via(str)], y: int = 3) -> Annotated[int, to(str)]:
             return x + y
 
     with pytest.raises(TypeError):
+
         @converted
-        def foo(x: Annotated[int, via(str)], y: int = 3) -> Annotated[via(int), to(str)]:
+        def foo(
+            x: Annotated[int, via(str)], y: int = 3
+        ) -> Annotated[via(int), to(str)]:
             return x + y
 
 
@@ -152,10 +186,7 @@ def test_no_param_conversions_failure():
     def always_fail2(typ, oj):
         raise TypeError()
 
-    @converted(parameter_conversions=[
-        always_fail,
-        always_fail2
-    ])
+    @converted(parameter_conversions=[always_fail, always_fail2])
     def foo(x, y):
         pass
 
@@ -175,10 +206,7 @@ def test_no_return_type_conversions_failure():
     def always_fail2(typ, oj):
         raise TypeError()
 
-    @converted(return_value_conversions=[
-        always_fail,
-        always_fail2
-    ])
+    @converted(return_value_conversions=[always_fail, always_fail2])
     def foo(x, y):
         pass
 
@@ -272,7 +300,7 @@ def test_base_model_conversion_including_return_type():
     def add(x: X, y: Y) -> dict:
         return Result(z=x.x + y.y)
 
-    assert add({"x": "2"}, {"y": 3}) == {"z":5}
+    assert add({"x": "2"}, {"y": 3}) == {"z": 5}
 
 
 def test_base_model_conversion_including_return_type_as_annotated():
@@ -289,7 +317,7 @@ def test_base_model_conversion_including_return_type_as_annotated():
     def add(x: X, y: Y) -> Annotated[Result, to(dict)]:
         return Result(z=x.x + y.y)
 
-    assert add({"x": 2}, {"y": 3}) == {"z":5}
+    assert add({"x": 2}, {"y": 3}) == {"z": 5}
 
 
 def test_dataclass_conversion():
@@ -304,7 +332,6 @@ def test_dataclass_conversion():
     @dataclasses.dataclass
     class Result:
         z: int
-
 
     @converted
     def add(x: X, y: Y):
