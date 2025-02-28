@@ -1,0 +1,85 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  # Run tests using tox on multiple Python versions and Pydantic combinations.
+  test:
+    name: Tox Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10, 3.11]
+        pydantic-version: [1, 2]
+    env:
+      # Pass the Pydantic version into tox (assumes your tox.ini reads PD_VERSION)
+      PD_VERSION: ${{ matrix.pydantic-version }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tox tests
+        run: tox
+
+  # Linting and static analysis
+  lint:
+    name: Lint & Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install linting tools
+        run: pip install ruff black mypy bandit
+
+      - name: Run ruff lint
+        run: ruff check .
+
+      - name: Check formatting with black
+        run: black --check .
+
+      - name: Run bandit security scan
+        run: bandit -r .
+
+  # On merge to main, create a release and publish with uv.
+  release:
+    name: Release & Publish
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: [test, lint]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish with uv
+        run: uv publish
