@@ -48,11 +48,11 @@ def get_typed_signature(call: Callable[..., Any]) -> inspect.Signature:
                 name=param.name,
                 kind=param.kind,
                 default=param.default,
-                annotation=get_original_type_according_to_annotation(get_typed_annotation(param.annotation, call)),
+                annotation=get_original_type_of_origin_annotation_according_to_annotation(get_typed_annotation(param.annotation, call)),
             )
             for param in signature.parameters.values()
         ],
-        return_annotation=get_original_type_according_to_annotation(get_typed_annotation(signature.return_annotation, call))
+        return_annotation=get_target_type_of_target_annotation_according_to_annotation(get_typed_annotation(signature.return_annotation, call))
     )
 
 
@@ -167,7 +167,7 @@ def locate_keyword_param(
 
 def get_target_type_positional(
         target_params: inspect.Signature,
-        original_args: tuple[object],
+        original_args: tuple[Any, ...],
 ) -> Iterable[Tuple[object, type]]:
     original_args = iter(original_args)
     for param_name, param in target_params.parameters.items():
@@ -228,12 +228,59 @@ class TargetAnnotation:
         self.annotation = annotation
 
 
-def get_target_type_according_to_annotation(typ: Any):
+class OriginAnnotation:
+    def __init__(self, annotation: Any):
+        self.annotation = annotation
+
+
+def get_target_type_of_origin_annotation_according_to_annotation(typ: Any):
     if get_origin(typ) is Annotated:
         # In Annotated[T, ...], T is the underlying type.
         annotations = get_args(typ)
-        if len(annotations) > 2 and any(*[isinstance(annotation, TargetAnnotation) for annotation in annotations[1:]]):
-            raise TypeError("Annotating with a target annotation (to()) is only supported"
+        if any([isinstance(annotation, TargetAnnotation) for annotation in annotations[1:]]):
+            raise TypeError("Expected via(), in parameters, got to()")
+        if len(annotations) > 2 and any([isinstance(annotation, OriginAnnotation) for annotation in annotations[1:]]):
+            raise TypeError("Annotating with a original parameter type annotation (via()) is only supported"
+                            "with one metadata parameter (cannot do (Annotated[T1, via(T2), M]))")
+        if len(annotations) != 2:
+            return typ
+        annotation = annotations[1]
+        if isinstance(annotation, OriginAnnotation):
+            return annotation.annotation
+
+        return typ
+    else:
+        return typ
+
+
+def get_original_type_of_origin_annotation_according_to_annotation(typ: Any):
+    if get_origin(typ) is Annotated:
+        # In Annotated[T, ...], T is the underlying type.
+        annotations = get_args(typ)
+        if any([isinstance(annotation, TargetAnnotation) for annotation in annotations[1:]]):
+            raise TypeError("Expected via(), in parameters, got to()")
+        if len(annotations) > 2 and any([isinstance(annotation, OriginAnnotation) for annotation in annotations[1:]]):
+            raise TypeError("Annotating with a original parameter type annotation (via()) is only supported"
+                            "with one metadata parameter (cannot do (Annotated[T1, via(T2), M]))")
+        if len(annotations) != 2:
+            return typ
+        original_annotation, target_annotation = annotations
+        if isinstance(target_annotation, OriginAnnotation):
+            return original_annotation
+
+        return typ
+    else:
+        return typ
+
+
+def get_target_type_of_target_annotation_according_to_annotation(typ: Any):
+    if get_origin(typ) is Annotated:
+        # In Annotated[T, ...], T is the underlying type.
+        annotations = get_args(typ)
+        if any([isinstance(annotation, OriginAnnotation) for annotation in annotations[1:]]):
+            raise TypeError("Expected to() in return type, got via()")
+        if len(annotations) > 2 and any([isinstance(annotation, TargetAnnotation) for annotation in annotations[1:]]):
+            raise TypeError("Annotating with a return type target annotation (to()) is only supported"
                             "with one metadata parameter (cannot do (Annotated[T1, to(T2), M]))")
         if len(annotations) != 2:
             return typ
@@ -246,32 +293,13 @@ def get_target_type_according_to_annotation(typ: Any):
         return typ
 
 
-def get_original_type_according_to_annotation(typ: Any):
-    if get_origin(typ) is Annotated:
-        # In Annotated[T, ...], T is the underlying type.
-        annotations = get_args(typ)
-        if len(annotations) > 2 and any(*[isinstance(annotation, TargetAnnotation) for annotation in annotations[1:]]):
-            raise TypeError("Annotating with a target annotation (to()) is only supported"
-                            "with one metadata parameter (cannot do (Annotated[T1, to(T2), M]))")
-        if len(annotations) != 2:
-            return typ
-        original_annotation, target_annotation = annotations
-        if isinstance(target_annotation, TargetAnnotation):
-            return original_annotation
-
-        return typ
-    else:
-        return typ
-
-
-
 def update_signature_according_to_annotations(signature: Signature):
     return signature.replace(
         parameters=[inspect.Parameter(
             name=param.name,
             kind=param.kind,
             default=param.default,
-            annotation=get_target_type_according_to_annotation(param.annotation)
+            annotation=get_target_type_of_origin_annotation_according_to_annotation(param.annotation)
         ) for param in signature.parameters.values()],
-        return_annotation=get_target_type_according_to_annotation(signature.return_annotation)
+        return_annotation=get_target_type_of_target_annotation_according_to_annotation(signature.return_annotation)
     )
