@@ -82,5 +82,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build with uv
+        run: uv build
+
       - name: Publish with uv
         run: uv publish
