@@ -65,6 +65,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     needs: [test, lint]
+    permissions:
+      id-token: write
+
     steps:
       - uses: actions/checkout@v3
 
