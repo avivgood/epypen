@@ -9,18 +9,25 @@ on:
       - main
 
 jobs:
+  get-pydantic-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      pydantic-matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Get all Pydantic versions
+        id: set-matrix
+        run: echo "::set-output name=matrix::$(curl -s https://pypi.org/pypi/pydantic/json | jq -r '[.releases | keys[]]' )"
+
   # Run tests using tox on multiple Python versions and Pydantic combinations.
   test:
-    name: Tox Tests
+    name: Test Library
     runs-on: ubuntu-latest
     continue-on-error: true
+    needs: [get-pydantic-versions]
     strategy:
       matrix:
         python-version: [3.8, 3.9, '3.10', 3.11, 3.12]
-        pydantic-version: [1, 2]
-    env:
-      # Pass the Pydantic version into tox (assumes your tox.ini reads PD_VERSION)
-      PD_VERSION: ${{ matrix.pydantic-version }}
+        pydantic-version:  ${{ fromJson(needs.get-pydantic-versions.outputs.pydantic-matrix) }}
     steps:
       - uses: actions/checkout@v3
 
@@ -29,11 +36,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install tox
-        run: pip install tox
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          # Install a specific version of uv.
+          version: "0.6.3"
 
-      - name: Run tox tests
-        run: tox
+      - name: Setup tests environment
+        run: uv install --dev pydantic==${{ matrix.pydantic-version }}
+
+      - name: Run tests
+        run: pytest -n auto
 
   # Linting and static analysis
   lint:

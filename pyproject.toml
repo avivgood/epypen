@@ -16,5 +16,8 @@ dev = [
     "pytest-xdist>=3.6.1",
 ]
 
+[tool.uv]
+kind = "library"
+
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
