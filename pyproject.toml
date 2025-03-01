@@ -8,6 +8,7 @@ dependencies = [
     "pydantic",
     "typing-extensions>=4.12.2",
 ]
+license = "GPL-3.0"
 
 [dependency-groups]
 dev = [
@@ -18,3 +19,7 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
+
+[build-system]
+requires = ["setuptools >= 75.8.2"]
+build-backend = "setuptools.build_meta"
