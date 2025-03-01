@@ -167,6 +167,7 @@ def test_mix_target_annotation_and_original_annotation():
             return x + y
 
     with pytest.raises(TypeError):
+
         @converted
         def foo(x: Annotated[to(int), via(str)], y: int = 3) -> Annotated[int, to(str)]:
             return x + y
