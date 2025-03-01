@@ -282,3 +282,4 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/jetbrains+all,visualstudiocode,python
 .python-version
+uv.lock

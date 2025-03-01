@@ -13,6 +13,7 @@ from typing_extensions import (
     Iterable,
     Optional,
     List,
+    Dict,
 )
 
 from pydantic.version import VERSION as PYDANTIC_VERSION
@@ -170,7 +171,7 @@ def locate_keyword_param(
 
 def get_target_type_positional(
     target_params: inspect.Signature,
-    original_args: tuple[Any, ...],
+    original_args: Tuple[Any, ...],
 ) -> Iterable[Tuple[object, type]]:
     original_args = iter(original_args)
     for param_name, param in target_params.parameters.items():
@@ -194,7 +195,7 @@ def get_target_type_positional(
 
 
 def get_target_type_keyword(
-    target_params: inspect.Signature, original_args: dict[str, object]
+    target_params: inspect.Signature, original_args: Dict[str, object]
 ) -> Iterable[Tuple[Tuple[str, object], type]]:
     remaining = dict(original_args)
 

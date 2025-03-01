@@ -31,7 +31,7 @@ def converted(
         Optional[List[Callable[[type, object], Any]]], Callable
     ] = None,
     return_value_conversions: Optional[List[Callable[[type, object], Any]]] = None,
-) -> Callable[Callable, Callable]:
+) -> Callable[[Callable], Callable]:
     if parameter_conversions is None or callable(parameter_conversions):
         selected_conversions = DEFAULT_PARAMETER_CONVERSIONS
     else:

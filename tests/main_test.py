@@ -2,7 +2,7 @@ import asyncio
 import dataclasses
 import inspect
 from inspect import Parameter
-from typing import Annotated
+from typing_extensions import Annotated
 from pydantic import BaseModel
 import pytest
 
