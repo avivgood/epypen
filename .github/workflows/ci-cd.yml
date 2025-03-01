@@ -83,6 +83,9 @@ jobs:
           version: "0.6.3"
 
 
+      - name: Upgrade setuptools
+        run: pip install --upgrade setuptools
+
       - name: Build with uv
         run: uv build
 
