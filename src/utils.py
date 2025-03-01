@@ -241,7 +241,7 @@ def get_target_type_of_origin_annotation_according_to_annotation(typ: Any):
         # In Annotated[T, ...], T is the underlying type.
         annotations = get_args(typ)
         if any(
-            [isinstance(annotation, TargetAnnotation) for annotation in annotations[1:]]
+            [isinstance(annotation, TargetAnnotation) for annotation in annotations]
         ):
             raise TypeError("Expected via(), in parameters, got to()")
         if len(annotations) > 2 and any(
@@ -267,7 +267,7 @@ def get_original_type_of_origin_annotation_according_to_annotation(typ: Any):
         # In Annotated[T, ...], T is the underlying type.
         annotations = get_args(typ)
         if any(
-            [isinstance(annotation, TargetAnnotation) for annotation in annotations[1:]]
+            [isinstance(annotation, TargetAnnotation) for annotation in annotations]
         ):
             raise TypeError("Expected via(), in parameters, got to()")
         if len(annotations) > 2 and any(
@@ -293,7 +293,7 @@ def get_target_type_of_target_annotation_according_to_annotation(typ: Any):
         # In Annotated[T, ...], T is the underlying type.
         annotations = get_args(typ)
         if any(
-            [isinstance(annotation, OriginAnnotation) for annotation in annotations[1:]]
+            [isinstance(annotation, OriginAnnotation) for annotation in annotations]
         ):
             raise TypeError("Expected to() in return type, got via()")
         if len(annotations) > 2 and any(
