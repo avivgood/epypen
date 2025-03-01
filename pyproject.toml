@@ -1,6 +1,6 @@
 [project]
 name = "epypen"
-version = "0.1.0-beta"
+version = "0.1.0"
 description = "Lightweight translation decorator between Python objects"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -10,6 +10,9 @@ dependencies = [
 ]
 license = {text= "GPL-3.0"}
 
+[tool.setuptools]
+packages = ["epypen"]
+package-dir= {"epypen" = "src"}
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",

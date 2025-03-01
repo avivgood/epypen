@@ -9,11 +9,11 @@ from typing_extensions import (
 )
 import functools
 
-from src.conversions import (
+from .conversions import (
     DEFAULT_PARAMETER_CONVERSIONS,
     DEFAULT_RETURN_TYPE_CONVERSIONS,
 )
-from src.utils import (
+from .utils import (
     get_typed_signature,
     get_target_type_keyword,
     get_target_type_positional,
