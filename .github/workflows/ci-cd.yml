@@ -9,16 +9,6 @@ on:
       - main
 
 jobs:
-  get-pydantic-versions:
-    runs-on: ubuntu-latest
-    outputs:
-      pydantic-matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - name: Get all Pydantic versions
-        id: set-matrix
-        run: echo "::set-output name=matrix::$(curl -s https://pypi.org/pypi/pydantic/json | jq -r '[.releases | keys[]]' )"
-
-  # Run tests using tox on multiple Python versions and Pydantic combinations.
   test:
     name: Test Library
     runs-on: ubuntu-latest
@@ -27,7 +17,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8, 3.9, '3.10', 3.11, 3.12]
-        pydantic-version:  ${{ fromJson(needs.get-pydantic-versions.outputs.pydantic-matrix) }}
+        pydantic-version: [1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, '1.9.0', '2.0', '2.1.0', '2.2.0', '2.6.0', '2.8.0', '2.9.0', '2.10.0']
     steps:
       - uses: actions/checkout@v3
 
