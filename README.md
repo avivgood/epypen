@@ -1,7 +1,3 @@
-Below is an updated version of the README that includes an example demonstrating the use of `via()` (and how it alters the function signature), as well as an explanation on how to customize conversions using the `parameter_conversions` and `return_value_conversions` options.
-
----
-
 # epypen  
 _A Lightweight Translation Decorator for Python Objects_
 
