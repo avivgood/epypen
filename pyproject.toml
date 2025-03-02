@@ -1,7 +1,7 @@
 [project]
 name = "epypen"
-version = "0.1.0"
-description = "Lightweight translation decorator between Python objects"
+version = "0.1.1"
+description = "epypen is a lightweight translation decorator that bridges the gap between raw Python objects and type-annotated data."
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
@@ -9,6 +9,30 @@ dependencies = [
     "typing-extensions>=4.12.2",
 ]
 license = {text= "GPL-3.0"}
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
+
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13"
+]
+
+[project.urls]
+Homepage = "https://github.com/avivgood/epypen"
+Documentation = "https://github.com/avivgood/epypen/blob/main/README.md"
+Repository = "https://github.com/avivgood/epypen.git"
+Issues = "https://github.com/avivgood/epypen/issues"
 
 [tool.setuptools]
 packages = ["epypen"]
