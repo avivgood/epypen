@@ -17,7 +17,6 @@ jobs:
       matrix:
         python-version: ["3.8" , "3.9", "3.10", "3.11", "3.12"]
         pydantic-version: ["1.2", "1.5", "1.9.0", "2.2.0", "2.6.0", "2.10.0"]
-        typing-extensions-version: ["4.6.1", "4.12.2"]
     steps:
       - uses: actions/checkout@v3
 
@@ -33,7 +32,7 @@ jobs:
           version: "0.6.3"
 
       - name: Run tests
-        run: uv run --with typing-extensions==${{matrix.typing-extensions-version}} --with pydantic==${{ matrix.pydantic-version }} -- pytest -n auto
+        run: uv run --with pydantic==${{ matrix.pydantic-version }} -- pytest -n auto
 
   # Linting and static analysis
   lint:
