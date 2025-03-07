@@ -3,10 +3,10 @@ name = "epypen"
 version = "0.1.1"
 description = "epypen is a lightweight translation decorator that bridges the gap between raw Python objects and type-annotated data."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.6"
 dependencies = [
     "pydantic",
-    "typing-extensions>=4.12.2",
+    "typing-extensions>=4.0.0",
 ]
 license = {text= "GPL-3.0"}
 classifiers = [
