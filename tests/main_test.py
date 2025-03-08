@@ -2,7 +2,7 @@ import asyncio
 import dataclasses
 import inspect
 from inspect import Parameter
-from typing_extensions import Annotated
+from typing_extensions import Annotated, Dict
 from pydantic import BaseModel
 import pytest
 
@@ -340,3 +340,15 @@ def test_dataclass_conversion():
         return Result(z=x.x + y.y)
 
     assert add(x=X(x=2), y=Y(y=3)).z == 5
+
+
+def test_conversions_basemodel_to_dict_according_to_type_params_passed_to_dict():
+    class M(BaseModel):
+        x: str
+
+    @converted
+    def mock(m: Dict[str, int]):
+        return m
+
+    m = M(x="5")
+    assert mock(m) == {"x": 5}
