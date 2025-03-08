@@ -14,7 +14,8 @@ def convert_object_to_any_type(typ, obj):
     # TypeAdapter(dict).validate_python(model) does not work either.
     # This function needs to support any time that is convertable by pydantic, just like parse_obj_as
     # in V1 did.
-    if isinstance(obj, BaseModel) and issubclass(get_origin(typ), dict):
+    original_type = get_origin(typ) or typ
+    if isinstance(obj, BaseModel) and issubclass(original_type, dict):
         obj = obj.dict()
 
     return parse_obj_as(typ, obj)
