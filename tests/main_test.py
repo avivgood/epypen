@@ -2,7 +2,7 @@ import asyncio
 import dataclasses
 import inspect
 from inspect import Parameter
-from typing_extensions import Annotated
+from typing_extensions import Annotated, Dict
 from pydantic import BaseModel
 import pytest
 
@@ -347,7 +347,7 @@ def test_conversions_basemodel_to_dict_according_to_type_params_passed_to_dict()
         x: str
 
     @converted
-    def mock(m: dict[str, int]):
+    def mock(m: Dict[str, int]):
         return m
 
     m = M(x="5")
