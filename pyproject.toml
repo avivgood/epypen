@@ -1,6 +1,6 @@
 [project]
 name = "epypen"
-version = "0.1.2"
+version = "1.0.0"
 description = "epypen is a lightweight translation decorator that bridges the gap between raw Python objects and type-annotated data."
 readme = "README.md"
 requires-python = ">=3.8"
