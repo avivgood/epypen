@@ -1,9 +1,4 @@
-from pydantic import BaseModel, VERSION
-
-if VERSION.startswith("1."):
-    from pydantic import parse_obj_as
-else:
-    from pydantic.v1 import parse_obj_as
+from pydantic import BaseModel, parse_obj_as
 from typing_extensions import get_origin
 
 
