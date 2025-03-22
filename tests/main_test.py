@@ -5,6 +5,7 @@ from inspect import Parameter
 from typing_extensions import Annotated, Dict
 from pydantic import BaseModel
 import pytest
+from enum import Enum
 
 from src.exceptions import ConversionsError
 from src.main import converted, to, via
@@ -352,3 +353,64 @@ def test_conversions_basemodel_to_dict_according_to_type_params_passed_to_dict()
 
     m = M(x="5")
     assert mock(m) == {"x": 5}
+
+
+def test_enum_conversion():
+    class Color(Enum):
+        RED = "red"
+        BLUE = "blue"
+
+    @converted
+    def process_color(color: Color) -> str:
+        return color.value
+
+    assert process_color("red") == "red"
+    assert process_color(Color.BLUE) == "blue"
+
+    @converted
+    def process_color_back(color: str) -> Color:
+        return Color(color)
+
+    assert process_color_back("red") == Color.RED
+    assert process_color_back(Color.BLUE.value) == Color.BLUE
+
+
+def test_unannotated_return_type():
+    @converted
+    def unannotated_return(x: int):
+        return str(x)
+
+    # Should work without type conversion since return type is not annotated
+    assert unannotated_return("5") == "5"
+
+
+def test_raw_callable():
+    def raw_func(x: int) -> int:
+        return x + 1
+
+    @converted
+    def process_callable(func: callable) -> int:
+        return func(5)
+
+    assert process_callable(raw_func) == 6
+
+
+def test_args_kwargs():
+    @converted
+    def process_args(*args: int, **kwargs: str) -> dict:
+        return {"args": list(args), "kwargs": kwargs}
+
+    result = process_args("1", "2", "3", a="hello", b="world")
+    assert result == {
+        "args": [1, 2, 3],
+        "kwargs": {"a": "hello", "b": "world"}
+    }
+
+
+def test_string_annotations():
+    @converted
+    def string_annotated(x: "int", y: "str") -> "bool":
+        return bool(int(x) + len(y))
+
+    assert string_annotated("5", "hello") is True
+    assert string_annotated("0", "") is False
