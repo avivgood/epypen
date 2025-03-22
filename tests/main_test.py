@@ -401,10 +401,7 @@ def test_args_kwargs():
         return {"args": list(args), "kwargs": kwargs}
 
     result = process_args("1", "2", "3", a="hello", b="world")
-    assert result == {
-        "args": [1, 2, 3],
-        "kwargs": {"a": "hello", "b": "world"}
-    }
+    assert result == {"args": [1, 2, 3], "kwargs": {"a": "hello", "b": "world"}}
 
 
 def test_string_annotations():
