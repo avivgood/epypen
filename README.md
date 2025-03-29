@@ -4,7 +4,7 @@ _A Lightweight Translation Decorator for Python Objects_
 [![PyPI version](https://img.shields.io/pypi/v/epypen.svg)](https://pypi.org/project/epypen/)  
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%203.0-blue.svg)](https://choosealicense.com/licenses/gpl-3.0/)
 ![Build Status](https://github.com/avivgood/epypen/actions/workflows/ci-cd.yml/badge.svg)
-![Coverage](https://img.shields.io/badge/coverage-78%25-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)
 ![Downloads](https://pepy.tech/badge/epypen)
 
 
