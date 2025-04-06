@@ -23,6 +23,7 @@ class ArgumentsSignatureAssociation:
 def signature_deepcopy(signature: inspect.Signature) -> inspect.Signature:
     return inspect.Signature(list(signature.parameters.values()), return_annotation=signature.return_annotation)
 
+
 def associate_arguments_to_signatures(signatures: Iterable[Signature], arguments: Arguments) \
         -> List[ArgumentsSignatureAssociation]:
     split_args = []
@@ -71,3 +72,6 @@ def associate_arguments_to_signatures(signatures: Iterable[Signature], arguments
     if args != [] or kwargs != {}:
         raise ValueError("Some values or unmached.")
     return split_args
+
+
+def create_unified_signature
