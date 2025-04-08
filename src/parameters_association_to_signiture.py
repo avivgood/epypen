@@ -2,7 +2,7 @@ import inspect
 from typing import Dict
 
 from typing_extensions import Iterable, List, Any
-from inspect import Signature, Parameter
+from inspect import Signature, Parameter, BoundArguments
 
 from src.utils import can_be_keyword, can_be_positional
 
@@ -24,54 +24,46 @@ def signature_deepcopy(signature: inspect.Signature) -> inspect.Signature:
     return inspect.Signature(list(signature.parameters.values()), return_annotation=signature.return_annotation)
 
 
-def associate_arguments_to_signatures(signatures: Iterable[Signature], arguments: Arguments) \
-        -> List[ArgumentsSignatureAssociation]:
-    split_args = []
-    args, kwargs = list(arguments.args), dict(arguments.kwargs)
-    signatures = [signature_deepcopy(sig) for sig in signatures]
+def bind_multiple(signatures: List[Signature], arguments: Arguments) \
+        -> List[BoundArguments]:
+    result = []
+
+    unified_signature = unify_signatures(signatures)
+    bound = unified_signature.bind(*arguments.args, **arguments.kwargs)
+
     for signature in signatures:
-        asc = ArgumentsSignatureAssociation(signature)
-        for param in list(signature.parameters.values()):
-            for kwargk, kwargv in dict(kwargs).items():
-                if kwargk == param.name and can_be_keyword(param):
-                    asc.arguments.kwargs[kwargk] = kwargv
-                    signature.replace(parameters=[p for p in signature.parameters.values() if p.name != param.name])
-                    kwargs.pop(kwargk)
-        split_args.append(asc)
-    for idx, arg in enumerate(list(args)):
-        for signature, asc in zip(signatures, split_args):
-            for param in list(signature.parameters.values()):
-                param: inspect.Parameter = param
-                arg: ArgumentsSignatureAssociation = arg
-                if can_be_positional(param):
-                    asc.arguments.args.append(arg)
-                    signature.replace(parameters=[p for p in signature.parameters.values() if p.name != param.name])
-                    args.pop(idx)
+        args = []
+        kwargs = {}
+        signature_params = dict(signature.parameters)
+        for unified_parameter_name, unified_parameter_value in bound.arguments:
+            if unified_parameter_name in signature_params:
+                if can_be_keyword(signature_params[unified_parameter_name]):
+                    kwargs[unified_parameter_name] = unified_parameter_value
+                else:
+                    args.append(unified_parameter_value)
 
-    for signature, asc in zip(signatures, split_args):
-        for param in list(signature.parameters.values()):
-            param: inspect.Parameter = param
-            arg: ArgumentsSignatureAssociation = arg
-            if param.kind == inspect.Parameter.VAR_POSITIONAL:
-                for idx, arg in enumerate(list(args)):
-                    asc.arguments.args.append(arg)
-                    signature.replace(parameters=[p for p in signature.parameters.values() if p.name != param.name])
-                    args.pop(idx)
-                continue
+        result.append(signature.bind(*args, **kwargs))
 
-    for signature, asc in zip(signatures, split_args):
-        for param in list(signature.parameters.values()):
-            param: inspect.Parameter = param
-            if param.kind == inspect.Parameter.VAR_KEYWORD:
-                for kwargk, kwargv in dict(kwargs).items():
-                    asc.arguments.kwargs[kwargk] = kwargv
-                    signature.replace(parameters=[p for p in signature.parameters.values() if p.name != param.name])
-                    kwargs.pop(kwargk)
-                continue
+    return result
 
-    if args != [] or kwargs != {}:
-        raise ValueError("Some values or unmached.")
-    return split_args
+def unify_signatures(signatures: List[inspect.Signature]) -> Signature:
+    if len(signatures) == 0:
+        return inspect.Signature()
+    params = [
+        param for signature in signatures
+        for param in signature.parameters.values()
+    ]
+    params.sort(key=lambda param: (param.kind, not param.default == Parameter.empty))
+    param_kinds = [param.kind for param in params]
+    # For some reason, inspect.Signature does not validate duplicate *args or **kwargs
+    if param_kinds.count(inspect.Parameter.VAR_KEYWORD):
+        raise ValueError("Only one instance of **kwargs allowed")
+    if param_kinds.count(inspect.Parameter.VAR_POSITIONAL):0
+        raise ValueError("Only one instance of *args allowed")
+    return inspect.Signature(parameters=params,
+                             return_annotation=signatures[0].return_annotation,
+                             __validate_parameters__=True)
 
 
-def create_unified_signature
+
+
