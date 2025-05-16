@@ -1,5 +1,5 @@
 import inspect
-from typing import Dict
+from typing import Dict, OrderedDict
 
 from typing_extensions import Iterable, List, Any
 from inspect import Signature, Parameter, BoundArguments
@@ -24,6 +24,17 @@ def signature_deepcopy(signature: inspect.Signature) -> inspect.Signature:
     return inspect.Signature(list(signature.parameters.values()), return_annotation=signature.return_annotation)
 
 
+def bind_args(signature: Signature, args: OrderedDict[str, Any]):
+    signature_params = dict(signature.parameters)
+    args = []
+    kwargs = {}
+    for param_name, param_value in args.values():
+            if can_be_keyword(signature_params[unified_parameter_name]):
+                kwargs[unified_parameter_name] = unified_parameter_value
+            else:
+                args.append(unified_parameter_value)
+
+
 def bind_multiple(signatures: List[Signature], arguments: Arguments) \
         -> List[BoundArguments]:
     result = []
@@ -35,7 +46,7 @@ def bind_multiple(signatures: List[Signature], arguments: Arguments) \
         args = []
         kwargs = {}
         signature_params = dict(signature.parameters)
-        for unified_parameter_name, unified_parameter_value in bound.arguments:
+        for unified_parameter_name, unified_parameter_value in bound.arguments.values():
             if unified_parameter_name in signature_params:
                 if can_be_keyword(signature_params[unified_parameter_name]):
                     kwargs[unified_parameter_name] = unified_parameter_value

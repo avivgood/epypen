@@ -20,9 +20,9 @@ from .utils import (
     convert,
     get_typed_annotation,
     TargetAnnotation,
-    update_signature_according_to_annotations,
+    get_original_signature,
     OriginAnnotation,
-    get_target_type_of_target_annotation_according_to_annotation,
+    get_target_type_return_value, get_target_signature,
 )
 
 
@@ -47,7 +47,13 @@ def converted(
 
         @functools.wraps(func)
         def raw_function(*args, **kwargs):
-            signature = get_typed_signature(func)
+            signature = inspect.signature(func)
+            target_signature = get_target_signature(signature)
+            bound_target_signature = target_signature.bind(*args, **kwargs)
+            for param_name, param_value in bound_target_signature.arguments
+
+
+            """
             typed_args = get_target_type_positional(signature, args)
             typed_kwargs = get_target_type_keyword(signature, kwargs)
             new_args = []
@@ -61,9 +67,10 @@ def converted(
             return_type = get_target_type_of_target_annotation_according_to_annotation(
                 get_typed_annotation(signature.return_annotation, func)
             )
+            """
             return convert(return_val, return_type, selected_return_value_conversions)
 
-        raw_function.__signature__ = update_signature_according_to_annotations(
+        raw_function.__signature__ = get_original_signature(
             raw_func_signature
         )
         return raw_function
